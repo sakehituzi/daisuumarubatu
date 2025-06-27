@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学数学〇✖クイズ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8; /* Light blue-grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 700px;
+            width: 100%;
+        }
+        .screen {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            padding: 2.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #2c5282;
+            z-index: 1000;
+        }
+        .user-id-display {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            word-break: break-all; /* Ensure long IDs wrap */
+            text-align: left;
+        }
+        .question-box {
+            background-color: #e0f2f7;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c5282;
+            text-align: center;
+            word-break: break-word;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .quiz-button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+        .quiz-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .true-button {
+            background-color: #48bb78;
+            box-shadow: 0 4px #38a169;
+        }
+        .true-button:active {
+            background-color: #38a169;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .false-button {
+            background-color: #ef4444;
+            box-shadow: 0 4px #dc2626;
+        }
+        .false-button:active {
+            background-color: #dc2626;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .score-display {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .result-message {
+            margin-top: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .next-button {
+            background-color: #4299e1;
+            box-shadow: 0 4px #3182ce;
+            margin-top: 1rem;
+        }
+        .next-button:active {
+            background-color: #3182ce;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .restart-button {
+            background-color: #63b3ed;
+            box-shadow: 0 4px #4299e1;
+            margin-top: 1rem;
+        }
+        .restart-button:active {
+                background-color: #4299e1;
+                box-shadow: none;
+                transform: translateY(0);
+        }
+        .feedback {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        .correct {
+            color: #28a745;
+        }
+        .incorrect {
+            color: #dc3545;
+        }
+
+        /* Common section styles (for add and delete management sections) */
+        .management-section {
+            border: 2px dashed #a0aec0;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            gap: 0.5rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+            position: relative; /* For info icon */
+            display: inline-flex; /* For info icon alignment */
+            align-items: center;
+        }
+        .input-group input[type="text"],
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 0.5rem;
+            transform: scale(1.2);
+        }
+        .add-button {
+            background-color: #667eea;
+            box-shadow: 0 4px #5a67d8;
+        }
+        .add-button:active {
+            background-color: #5a67d8;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .message-box {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            border: 1px solid #ffeeba;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .info-message-box {
+            background-color: #e2e8f0; /* Light gray */
+            color: #2d3748; /* Dark gray text */
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            border: 1px solid #cbd5e0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        /* Styles for the question list within management section */
+        .question-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            word-break: break-word;
+        }
+        .question-item span {
+            flex-grow: 1;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #2d3748;
+            margin-right: 1rem;
+        }
+        .question-item input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 0.5rem;
+        }
+        .question-item .question-text-for-list {
+             flex-grow: 1;
+             text-align: left;
+             font-size: 0.95rem;
+             color: #2d3748;
+             margin-right: 1rem;
+             display: flex;
+             align-items: center;
+        }
+        .delete-button {
+            background-color: #ef4444;
+            box-shadow: 0 3px #dc2626;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .delete-button:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px #b91c1c;
+        }
+        .delete-button:active {
+            background-color: #b91c1c;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+
+        .undo-button {
+            background-color: #8b5cf6; /* Purple */
+            box-shadow: 0 4px #7c3aed;
+            margin-top: 1rem;
+        }
+        .undo-button:active {
+            background-color: #7c3aed;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .manage-toggle-button {
+            flex: 1 1 32%; /* 3 buttons */
+        }
+        .manage-button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .share-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .share-checkbox-group input {
+            transform: scale(1.2);
+        }
+
+        /* Custom Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .modal-content input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .modal-ok-button {
+            background-color: #4299e1;
+            color: white;
+            box-shadow: 0 3px #3182ce;
+        }
+        .modal-ok-button:active {
+            background-color: #3182ce;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .modal-cancel-button {
+            background-color: #a0aec0;
+            color: white;
+            box-shadow: 0 3px #718096;
+        }
+        .modal-cancel-button:active {
+            background-color: #718096;
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background-color: #e0e7ff; /* Lighter blue for list items */
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            word-break: break-word;
+        }
+        .list-item-name {
+            flex-grow: 1;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-right: 1rem;
+        }
+        .list-item-id {
+            font-size: 0.8rem;
+            color: #606f7b;
+            font-family: monospace;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .list-item-id:hover {
+            color: #4299e1;
+        }
+
+        /* Info Icon Styles */
+        .info-icon-container {
+            position: absolute; /* Position relative to parent element/label */
+            top: 50%;
+            right: -25px; /* Adjust as needed to position outside the label/hX text */
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.2em;
+            height: 1.2em;
+            border-radius: 50%;
+            background-color: #a0aec0; /* Light grey background */
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+            cursor: help;
+            line-height: 1;
+            box-sizing: border-box;
+            user-select: none; /* Prevent selection of '?' */
+        }
+
+        /* Adjust right positioning for elements inside input-group to be closer to their labels */
+        .input-group .info-icon-container {
+            right: -20px; /* Closer to the label text */
+            font-size: 0.8em; /* Slightly larger for input labels */
+        }
+
+        /* Adjust right positioning for h1, h2, h3 for better visual balance */
+        h1 .info-icon-container,
+        h2 .info-icon-container,
+        h3 .info-icon-container {
+            right: 0; /* Align with the right edge of the heading itself */
+            transform: translateY(-50%) translateX(10px); /* Move a bit right of its own boundary */
+            font-size: 0.9em; /* Larger for headings */
+        }
+
+        .info-popup {
+            position: absolute;
+            top: 50%; /* Vertically center relative to icon */
+            left: 100%; /* To the right of the icon */
+            transform: translateY(-50%) translateX(8px); /* Adjust spacing from icon */
+            background-color: #333;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            white-space: nowrap; /* Prevent text wrapping */
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+            text-align: left; /* Ensure text is left aligned within popup */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .info-icon-container:hover .info-popup {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Make parent elements relative for info icon positioning */
+        h1, h2, h3, .input-group label, .share-checkbox-group label, .user-id-display {
+            position: relative;
+        }
+
+        /* Specific alignment for info icons */
+        .user-id-display .info-icon-container {
+            position: static; /* Let it flow with text */
+            margin-left: 0.5rem; /* Add spacing */
+            transform: none; /* Remove absolute positioning transforms */
+            font-size: 0.8em;
+            vertical-align: middle; /* Align with text */
+        }
+
+        /* Adjust for checkbox labels where the icon needs to be part of the label's inline flow */
+        .share-checkbox-group label {
+            display: inline-flex; /* Ensure label content and icon stay together */
+            align-items: center;
+        }
+        .share-checkbox-group label .info-icon-container {
+            position: static; /* Remove absolute positioning */
+            transform: none;
+            margin-left: 0.5rem; /* Space from checkbox text */
+            font-size: 0.7em; /* Smaller for checkbox label */
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .screen {
+                padding: 1.5rem;
+            }
+            .question-box {
+                font-size: 1rem;
+                min-height: 100px;
+            }
+            .quiz-button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+            .radio-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            .question-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .question-item span {
+                margin-right: 0;
+            }
+            .delete-button {
+                width: 100%;
+            }
+            .manage-button-group {
+                flex-direction: column;
+            }
+            .manage-toggle-button {
+                width: 100%;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-button {
+                width: 100%;
+            }
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            /* Adjust info icon for small screens if they overlap */
+            .info-icon-container {
+                right: 5px; /* Bring closer to avoid overflow */
+                font-size: 0.7em; /* Make slightly smaller */
+            }
+            .info-popup {
+                white-space: normal; /* Allow popup text to wrap on small screens */
+                max-width: 150px; /* Max width for popups on small screens */
+            }
+            h1 .info-icon-container,
+            h2 .info-icon-container,
+            h3 .info-icon-container {
+                transform: translateY(-50%) translateX(5px); /* Adjust slightly */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loading-overlay">
+        <p>データを読み込み中...</p>
+    </div>
+
+    <!-- Custom Password Prompt Modal -->
+    <div id="password-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-gray-800" id="password-modal-title">パスワード入力</h3>
+            <input type="password" id="password-modal-input" placeholder="パスワードを入力">
+            <div class="modal-buttons">
+                <button id="password-modal-ok" class="modal-button modal-ok-button">OK</button>
+                <button id="password-modal-cancel" class="modal-button modal-cancel-button">キャンセル</button>
+            </div>
+            <p id="password-modal-message" class="info-message-box hidden"></p>
+        </div>
+    </div>
+
+
+    <div class="main-container hidden" id="app-content">
+        <!-- クイズ画面 -->
+        <div id="quiz-screen" class="screen">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                大学数学〇✖クイズ
+            </h1>
+            <p id="user-id-display" class="user-id-display hidden">
+                あなたのID: <span id="user-id-value"></span>
+                <span class="info-icon-container">?
+                    <span class="info-popup">あなたのこのツールのユーザーIDです。他のユーザーに教えることで、そのユーザーがあなたの公開リストや共有問題をプレイできます。</span>
+                </span>
+            </p>
+
+            <div class="input-group mb-4">
+                <label for="question-source-select">問題ソース:</label>
+                <select id="question-source-select" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="my">自分の問題のみ</option>
+                    <option value="all-random-30">すべての問題からランダム30問</option>
+                    <option value="specific-user">特定のユーザーの問題のみ</option>
+                    <option value="specific-list">特定のリストの問題</option>
+                </select>
+            </div>
+
+            <div id="specific-user-id-group" class="input-group mb-4 hidden">
+                <label for="specific-user-id-input">特定のユーザーID:</label>
+                <input type="text" id="specific-user-id-input" placeholder="ユーザーIDを入力">
+                <p id="specific-user-id-message" class="user-id-display hidden"></p>
+            </div>
+
+            <div id="specific-list-id-group" class="input-group mb-4 hidden">
+                <label for="specific-list-id-input">リストID:</label>
+                <input type="text" id="specific-list-id-input" placeholder="リストIDを入力">
+                <p id="specific-list-id-message" class="user-id-display hidden"></p>
+            </div>
+
+            <div id="question-text" class="question-box">
+                クイズを読み込み中...
+            </div>
+            <div class="button-group" id="quiz-buttons">
+                <button id="true-button" class="quiz-button true-button">〇 (True)</button>
+                <button id="false-button" class="quiz-button false-button">✖ (False)</button>
+            </div>
+            <div id="feedback" class="feedback"></div>
+            <p id="score-display" class="score-display">スコア: 0 / 0</p>
+            <button id="next-button" class="quiz-button next-button hidden">次の問題</button>
+            <div id="result-screen" class="hidden">
+                <p id="final-score" class="result-message"></p>
+                <p id="round-completion-message" class="result-message mt-2 text-blue-700 hidden"></p>
+                <button id="restart-button" class="quiz-button restart-button">もう一度プレイ</button>
+            </div>
+            <button id="go-to-manage-button" class="quiz-button next-button mt-6">問題管理へ</button>
+            <button id="go-to-admin-button" class="quiz-button next-button mt-2">管理者ログイン</button>
+        </div>
+
+        <!-- 問題管理画面 -->
+        <div id="manage-screen" class="screen hidden">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                問題管理
+            </h1>
+            <p class="text-sm text-gray-600 mb-4">ここでは、あなたの問題と、あなたが作成した共有問題を管理できます。</p>
+
+            <div class="manage-button-group mb-4">
+                <button id="show-manage-add" class="quiz-button manage-toggle-button next-button">問題の追加</button>
+                <button id="show-manage-delete" class="quiz-button manage-toggle-button restart-button">問題の消去</button>
+                <button id="show-manage-lists" class="quiz-button manage-toggle-button add-button">問題リストの管理</button>
+            </div>
+
+            <!-- 問題の追加セクション -->
+            <div id="manage-add-questions-section" class="management-section">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    新しい問題を追加
+                </h2>
+                <div class="input-group">
+                    <label for="new-question-text">問題文:</label>
+                    <textarea id="new-question-text" placeholder="例: 関数 f(x) = x² は偶関数である。" rows="3"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>正解:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="new-answer" value="true" checked> 〇 (True)
+                        </label>
+                        <label>
+                            <input type="radio" name="new-answer" value="false"> ✖ (False)
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="new-explanation-text">解説:</label>
+                    <textarea id="new-explanation-text" placeholder="例: 偶関数は f(-x) = f(x) を満たします。x² はこの条件を満たします。" rows="3"></textarea>
+                </div>
+                <div class="share-checkbox-group">
+                    <input type="checkbox" id="share-with-everyone" checked> <!-- Default to checked -->
+                    <label for="share-with-everyone">みんなと共有する</label>
+                </div>
+                <button id="add-question-button" class="quiz-button add-button">問題を追加</button>
+                <div id="add-question-message" class="message-box hidden"></div>
+
+                <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">
+                    問題のインポート/エクスポート
+                    <span class="info-icon-container">?
+                        <span class="info-popup">問題をファイルとして保存したり、ファイルから読み込んだりできます。</span>
+                    </span>
+                </h2>
+                <div class="button-group">
+                    <button id="export-my-questions" class="quiz-button next-button">
+                        自分の問題をエクスポート
+                    </button>
+                    <button id="import-my-questions" class="quiz-button add-button">
+                        自分の問題をインポート
+                    </button>
+                </div>
+                <input type="file" id="import-file-input" accept=".json" class="hidden">
+                <div id="import-export-message" class="message-box hidden"></div>
+            </div>
+
+            <!-- 問題の消去セクション -->
+            <div id="manage-delete-questions-section" class="management-section hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    自分の問題の消去
+                </h2>
+                <p class="text-sm text-gray-600 mb-4">あなたの問題の中から、削除したいものを選択してください。</p>
+                <div id="existing-questions-list" class="flex flex-col gap-3">
+                    <!-- Questions will be listed here dynamically -->
+                </div>
+                <div id="manage-question-message" class="message-box hidden"></div>
+                <button id="undo-delete-button" class="quiz-button undo-button hidden">元に戻す</button>
+            </div>
+
+            <!-- 問題リストの管理セクション -->
+            <div id="manage-lists-section" class="management-section hidden">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                    問題リストの管理
+                </h1>
+                <p class="text-sm text-gray-600 mb-4">ここで問題リストを作成・管理できます。</p>
+
+                <div class="manage-button-group mb-4">
+                    <button id="show-create-list" class="quiz-button manage-toggle-button next-button">新しいリストを作成</button>
+                    <button id="show-existing-lists" class="quiz-button manage-toggle-button restart-button">既存のリスト</button>
+                </div>
+
+                <!-- 新しいリストを作成サブセクション -->
+                <div id="new-list-creation-sub-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                        新しいリストを作成
+                    </h2>
+                    <div class="input-group">
+                        <label for="new-list-name-input">リスト名:</label>
+                        <input type="text" id="new-list-name-input" placeholder="例: 微積分基礎問題集">
+                    </div>
+                    <div class="share-checkbox-group mb-4">
+                        <input type="checkbox" id="share-list-with-everyone" checked>
+                        <label for="share-list-with-everyone">みんなと共有するリストにする</label>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">リストに含める問題</h3>
+                    <p class="text-sm text-gray-600 mb-4">あなたの問題の中から、リストに追加したい問題にチェックを入れてください。</p>
+                    <div id="my-questions-for-list-creation" class="flex flex-col gap-2 mb-4">
+                        <!-- My questions with checkboxes will be loaded here -->
+                    </div>
+                    <button id="create-list-button" class="quiz-button add-button">リストを作成</button>
+                    <div id="create-list-message" class="message-box hidden"></div>
+                </div>
+
+                <!-- 既存のリストサブセクション -->
+                <div id="existing-lists-sub-section" class="hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                        既存のリスト
+                    </h2>
+                    <div class="manage-button-group mb-4"> <!-- New Toggle for Existing Lists -->
+                        <button id="show-my-created-lists" class="quiz-button manage-toggle-button next-button">自分が作成したリスト</button>
+                        <button id="show-others-shared-lists" class="quiz-button manage-toggle-button restart-button">他のユーザーが共有したリスト</button>
+                    </div>
+                    <div id="existing-lists-list" class="flex flex-col gap-3">
+                        <!-- Existing lists will be loaded here -->
+                    </div>
+                    <div id="delete-list-message" class="message-box hidden"></div>
+                    <button id="undo-list-delete-button" class="quiz-button undo-button hidden">リスト削除を元に戻す</button>
+                </div>
+            </div>
+
+            <button id="go-to-quiz-button" class="quiz-button restart-button mt-6">クイズに戻る</button>
+        </div>
+
+        <!-- 管理者画面 -->
+        <div id="admin-screen" class="screen hidden">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                管理者画面 (運営専用)
+            </h1>
+            <p class="text-sm text-gray-600 mb-4">ここではすべての共有問題の管理と問題の追加が行えます。</p>
+
+            <!-- 管理者用の問題一覧（共有問題のみ） -->
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                共有問題の管理
+                <span class="info-icon-container">?
+                    <span class="info-popup">すべての共有問題（他のユーザーが作成したものも含む）を削除できます。</span>
+                </span>
+            </h2>
+            <div id="admin-shared-questions-list" class="flex flex-col gap-3">
+                <!-- Shared questions will be listed here dynamically for admin -->
+            </div>
+            <div id="admin-manage-message" class="message-box hidden"></div>
+            <button id="admin-undo-delete-button" class="quiz-button undo-button hidden">元に戻す</button>
+
+            <!-- 新しい問題を追加 (管理者も利用) -->
+            <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">新しい問題を追加</h2>
+            <div class="input-group">
+                <label for="admin-new-question-text">問題文:</label>
+                <textarea id="admin-new-question-text" placeholder="例: 関数 f(x) = x² は偶関数である。" rows="3"></textarea>
+            </div>
+            <div class="input-group">
+                <label>正解:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="admin-new-answer" value="true" checked> 〇 (True)
+                    </label>
+                    <label>
+                        <input type="radio" name="admin-new-answer" value="false"> ✖ (False)
+                    </label>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="admin-new-explanation-text">解説:</label>
+                <textarea id="admin-new-explanation-text" placeholder="例: 偶関数は f(-x) = f(x) を満たします。x² はこの条件を満たします。" rows="3"></textarea>
+            </div>
+            <div class="share-checkbox-group">
+                <input type="checkbox" id="admin-share-with-everyone" checked> <!-- Default to checked -->
+                <label for="admin-share-with-everyone">みんなと共有する</label>
+            </div>
+            <button id="admin-add-question-button" class="quiz-button add-button">問題を追加</button>
+            <div id="admin-add-question-message" class="message-box hidden"></div>
+
+            <button id="go-to-quiz-from-admin-button" class="quiz-button restart-button mt-6">クイズに戻る</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase SDK のインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, query, where, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =====================================================================
+        // 管理者パスワードの設定
+        const ADMIN_PASSWORD = "株式会社まある";
+        // =====================================================================
+
+        // Firebase および Firestore の初期化変数
+        let app;
+        let db;
+        let auth;
+        let userId = 'anonymous'; // 匿名ユーザーIDの初期値
+        let isAuthReady = false; // 認証準備完了フラグ
+
+        // ローディングオーバーレイ要素
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const userIdValue = document.getElementById('user-id-value');
+
+        // クイズの質問データ (Firestore からロードされる)
+        let myQuestions = []; // 自分のプライベート問題と自分が作成した共有問題
+        let sharedQuestions = []; // みんなに共有された公開問題（自分以外のユーザーが作成したものも含む）
+        let questions = []; // 現在のクイズで使われる問題セット
+
+        // 問題リスト関連データ
+        let myQuestionLists = []; // 自分が作成した問題リスト
+        let publicQuestionLists = []; // すべての公開リスト（他のユーザー作成リストを含む）
+
+        // 削除取り消し用変数
+        let lastDeletedQuestion = null; // for question deletion
+        let lastDeletedDocId = null; // for question deletion
+        let undoTimeout = null; // for question deletion
+
+        let lastDeletedList = null; // for list deletion
+        let lastDeletedListDocId = null; // for list deletion
+        let undoListTimeout = null; // for list deletion
+
+
+        // クイズの状態変数
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizActive = true;
+
+        // クイズ画面の要素
+        const quizScreen = document.getElementById('quiz-screen');
+        const questionTextElement = document.getElementById('question-text');
+        const trueButton = document.getElementById('true-button');
+        const falseButton = document.getElementById('false-button');
+        const scoreDisplay = document.getElementById('score-display');
+        const nextButton = document.getElementById('next-button');
+        const resultScreen = document.getElementById('result-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const feedbackElement = document.getElementById('feedback');
+        const quizButtons = document.getElementById('quiz-buttons');
+        const goToManageButton = document.getElementById('go-to-manage-button');
+        const goToAdminButton = document.getElementById('go-to-admin-button'); // 管理者ログインボタン
+        const roundCompletionMessageElement = document.getElementById('round-completion-message');
+        const questionSourceSelect = document.getElementById('question-source-select');
+        const specificUserIdGroup = document.getElementById('specific-user-id-group');
+        const specificUserIdInput = document.getElementById('specific-user-id-input');
+        const specificUserIdMessage = document.getElementById('specific-user-id-message');
+        const specificListIdGroup = document.getElementById('specific-list-id-group');
+        const specificListIdInput = document.getElementById('specific-list-id-input');
+        const specificListIdMessage = document.getElementById('specific-list-id-message');
+
+
+        // 問題管理画面の要素
+        const manageScreen = document.getElementById('manage-screen');
+        // 問題管理画面のサブセクション
+        const manageAddQuestionsSection = document.getElementById('manage-add-questions-section');
+        const manageDeleteQuestionsSection = document.getElementById('manage-delete-questions-section');
+        const manageListsSection = document.getElementById('manage-lists-section'); // 問題リスト管理セクション
+
+        const newQuestionTextInput = document.getElementById('new-question-text');
+        const newAnswerRadios = document.getElementsByName('new-answer');
+        const newExplanationTextInput = document.getElementById('new-explanation-text');
+        const addQuestionButton = document.getElementById('add-question-button');
+        const addQuestionMessage = document.getElementById('add-question-message');
+        const existingQuestionsList = document.getElementById('existing-questions-list'); // 問題の消去セクション用
+        const manageQuestionMessage = document.getElementById('manage-question-message'); // 問題の消去セクション用
+        const goToQuizButton = document.getElementById('go-to-quiz-button');
+        const undoDeleteButton = document.getElementById('undo-delete-button'); // 問題の消去セクション用
+        const shareWithEveryoneCheckbox = document.getElementById('share-with-everyone');
+
+        // インポート/エクスポート関連の要素
+        const exportMyQuestionsButton = document.getElementById('export-my-questions');
+        const importMyQuestionsButton = document.getElementById('import-my-questions');
+        const importFileInput = document.getElementById('import-file-input');
+        const importExportMessage = document.getElementById('import-export-message');
+
+        // 問題管理画面内のサブ画面切り替えボタン
+        const showManageAddButton = document.getElementById('show-manage-add');
+        const showManageDeleteButton = document.getElementById('show-manage-delete');
+        const showManageListsButton = document.getElementById('show-manage-lists'); // 問題リスト管理ボタン
+
+        // 問題リスト管理セクションの要素
+        const newListnameInput = document.getElementById('new-list-name-input');
+        const shareListWithEveryoneCheckbox = document.getElementById('share-list-with-everyone');
+        const myQuestionsForListCreation = document.getElementById('my-questions-for-list-creation');
+        const createListButton = document.getElementById('create-list-button');
+        const createListMessage = document.getElementById('create-list-message');
+        const existingListsList = document.getElementById('existing-lists-list');
+        const deleteListMessage = document.getElementById('delete-list-message');
+        const undoListDeleteButton = document.getElementById('undo-list-delete-button');
+
+        // 問題リスト管理サブセクションの切り替えボタン
+        const showCreateListButton = document.getElementById('show-create-list');
+        const showExistingListsButton = document.getElementById('show-existing-lists');
+        let currentListManageSubView = 'my_created'; // 'my_created' or 'others_shared'
+
+
+        // 管理者画面の要素
+        const adminScreen = document.getElementById('admin-screen');
+        const adminSharedQuestionsList = document.getElementById('admin-shared-questions-list');
+        const adminManageMessage = document.getElementById('admin-manage-message');
+        const adminUndoDeleteButton = document.getElementById('admin-undo-delete-button');
+        const adminNewQuestionTextInput = document.getElementById('admin-new-question-text');
+        const adminNewAnswerRadios = document.getElementsByName('admin-new-answer');
+        const adminNewExplanationTextInput = document.getElementById('admin-new-explanation-text');
+        const adminAddQuestionButton = document.getElementById('admin-add-question-button');
+        const adminAddQuestionMessage = document.getElementById('admin-add-question-message');
+        const adminShareWithEveryoneCheckbox = document.getElementById('admin-share-with-everyone');
+        const goToQuizFromAdminButton = document.getElementById('go-to-quiz-from-admin-button');
+
+        // カスタムモーダルの要素
+        const passwordModalOverlay = document.getElementById('password-modal-overlay');
+        const passwordModalInput = document.getElementById('password-modal-input');
+        const passwordModalOkButton = document.getElementById('password-modal-ok');
+        const passwordModalCancelButton = document.getElementById('password-modal-cancel');
+        const passwordModalMessage = document.getElementById('password-modal-message');
+
+        let passwordModalResolve = null; // Promiseのresolve関数を保持
+
+        // Firebase と Firestore の初期化
+        async function initializeFirebase() {
+            try {
+                // Canvas環境で__firebase_configが利用可能かを確認
+                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                    console.error("Firebase config (defined as __firebase_config) is not available in this environment.");
+                    loadingOverlay.textContent = 'エラー: Firebase設定が利用できません。';
+                    appContent.classList.add('hidden');
+                    return; // これ以上進めない
+                }
+
+                const firebaseConfig = JSON.parse(__firebase_config);
+                
+                // FirebaseApp を初期化
+                app = initializeApp(firebaseConfig);
+                // Firestore および Auth サービスを取得
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 認証状態の監視
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdValue.textContent = userId;
+                        userIdDisplay.classList.remove('hidden'); // ユーザーIDを表示
+
+                        goToAdminButton.classList.remove('hidden'); // 管理者ログインボタンを常に表示
+                        
+                        isAuthReady = true;
+                        loadingOverlay.classList.add('hidden'); // ローディングオーバーレイを非表示
+                        appContent.classList.remove('hidden'); // アプリのコンテンツを表示
+                        console.log("Firebase initialized and authenticated as:", userId);
+                        setupFirestoreListeners(); // Firestore リスナーを設定
+                    } else {
+                        // ユーザーが認証されていない場合、匿名ログインを試みる
+                        try {
+                            await signInAnonymously(auth);
+                            // 匿名ログイン成功後、onAuthStateChanged が再度発火し、上記の `if (user)` ブロックが実行されます。
+                        } catch (anonSignInError) {
+                            console.error("Anonymous sign-in failed:", anonSignInError);
+                            loadingOverlay.textContent = 'エラー: 匿名ログインに失敗しました。';
+                            // 匿名ログインに失敗した場合は、エラーメッセージを表示し、アプリコンテンツを表示しない
+                            appContent.classList.add('hidden');
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                loadingOverlay.textContent = `エラー: アプリの初期化に失敗しました。詳細: ${error.message}`;
+                appContent.classList.add('hidden');
+            }
+        }
+
+        // Firestore から問題をリアルタイムでロードするリスナーを設定
+        function setupFirestoreListeners() {
+            if (!db || !userId) {
+                console.warn("Firestore or User ID not ready for listener setup.");
+                return;
+            }
+
+            // Private Questions Listener (自分の問題)
+            const privateCollectionPath = `artifacts/${__app_id}/users/${userId}/quiz_questions`;
+            const privateQRef = collection(db, privateCollectionPath);
+
+            onSnapshot(privateQRef, async (snapshot) => {
+                const fetchedPrivateQuestions = [];
+                snapshot.forEach(doc => {
+                    fetchedPrivateQuestions.push({ id: doc.id, ...doc.data(), isPublic: false }); // Mark as private
+                });
+                myQuestions = fetchedPrivateQuestions.sort((a, b) => a.order - b.order);
+                // console.log("My questions loaded (onSnapshot private):", myQuestions.length, myQuestions); // Debug log
+
+                // 初期問題がまだ追加されていない場合、Firestoreに追加
+                try {
+                    const flagDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/_settings_/flags`);
+                    const flagDocSnapshot = await getDocs(collection(db, `artifacts/${__app_id}/users/${userId}/_settings_`));
+                    const initialQuestionsAdded = flagDocSnapshot.docs.some(doc => doc.id === 'flags' && doc.data().initialQuestionsAdded);
+
+                    if (myQuestions.length === 0 && !initialQuestionsAdded) {
+                        console.log("Private collection is empty for user, adding initial questions.");
+                        await addInitialQuestionsToFirestore(privateCollectionPath);
+                        await setDoc(flagDocRef, { initialQuestionsAdded: true }, { merge: true }); // Set flag after adding
+                    }
+                } catch (err) {
+                    console.error("Error checking or setting initial questions flag:", err);
+                }
+
+                updateQuizQuestionSet(); // クイズで使う問題セットを更新
+                displayQuestion(); // クイズ画面を更新
+                renderQuestionListForManagement(); // 問題管理画面を更新
+                renderAdminSharedQuestionList(); // 管理者画面の共有問題を更新
+                renderMyQuestionsForListCreation(); // リスト作成用の問題リストを更新
+            }, (error) => {
+                console.error("Error listening to private Firestore:", error);
+            });
+
+            // Public Questions Listener (みんなの共有問題)
+            const publicCollectionPath = `artifacts/${__app_id}/public/data/quiz_shared_questions`;
+            const publicQRef = collection(db, publicCollectionPath);
+
+            onSnapshot(publicQRef, (snapshot) => {
+                const fetchedSharedQuestions = [];
+                snapshot.forEach(doc => {
+                    fetchedSharedQuestions.push({ id: doc.id, ...doc.data(), isPublic: true }); // Mark as public
+                });
+                sharedQuestions = fetchedSharedQuestions.sort((a, b) => a.order - b.order);
+                // console.log("Shared questions loaded (onSnapshot public):", sharedQuestions.length, sharedQuestions); // Debug log
+                updateQuizQuestionSet(); // クイズで使う問題セットを更新
+                displayQuestion(); // クイズ画面を更新
+                renderQuestionListForManagement(); // 問題管理画面を更新
+                renderAdminSharedQuestionList(); // 管理者画面の共有問題を更新
+                renderMyQuestionsForListCreation(); // リスト作成用の問題リストを更新 (自分の共有問題も含まれるため)
+            }, (error) => {
+                console.error("Error listening to public Firestore:", error);
+            });
+
+            // My Question Lists Listener (自分が作成した問題リスト)
+            const myOwnedListsRef = query(collection(db, `artifacts/${__app_id}/public/data/quiz_question_lists`), where("creatorUid", "==", userId));
+
+            onSnapshot(myOwnedListsRef, (snapshot) => {
+                const fetchedMyLists = [];
+                snapshot.forEach(doc => {
+                    fetchedMyLists.push({ id: doc.id, ...doc.data() });
+                });
+                myQuestionLists = fetchedMyLists.sort((a, b) => {
+                    const nameA = a.listName || '';
+                    const nameB = b.listName || '';
+                    return nameA.localeCompare(nameB);
+                });
+                // console.log("My question lists loaded:", myQuestionLists.length, myQuestionLists); // Debug log
+                renderExistingListsForManagement(); // 既存リストのUIを更新
+            }, (error) => {
+                console.error("Error listening to my question lists:", error);
+            });
+
+            // Public Question Lists Listener (他のユーザーが作成した公開リストを含むすべての公開リスト)
+            const publicListsQRef = query(collection(db, `artifacts/${__app_id}/public/data/quiz_question_lists`), where("isPublic", "==", true));
+
+            onSnapshot(publicListsQRef, (snapshot) => {
+                const fetchedPublicLists = [];
+                snapshot.forEach(doc => {
+                    fetchedPublicLists.push({ id: doc.id, ...doc.data() });
+                });
+                publicQuestionLists = fetchedPublicLists.sort((a, b) => {
+                    const nameA = a.listName || '';
+                    const nameB = b.listName || '';
+                    return nameA.localeCompare(nameB);
+                });
+                // console.log("Public question lists loaded:", publicQuestionLists.length, publicQuestionLists); // Debug log
+                renderExistingListsForManagement(); // 既存リストのUIを更新
+            }, (error) => {
+                console.error("Error listening to public question lists:", error);
+            });
+        }
+
+        // 初期問題をFirestoreに追加する関数
+        async function addInitialQuestionsToFirestore(privateCollectionPath) {
+            const initialQuestionsData = [
+                { question: "関数 f(x) = |x| は x=0 で微分可能である。", answer: false, explanation: "関数 f(x) = |x| は x=0 で尖点を持つため、微分不可能です。右側微分係数と左側微分係数が一致しません。" },
+                { question: "任意の正方行列 A に対して、A A⁻¹ = I （単位行列）が常に成り立つ。", answer: false, explanation: "逆行列 A⁻¹ は、正方行列 A が正則（行列式が0でない）である場合にのみ存在します。行列式が0の行列には逆行列がありません。" },
+                { question: "定積分 -1から1までのx³ dx = 0 である。", answer: true, explanation: "被積分関数 f(x) = x³ は奇関数であり、積分区間が原点対称であるため、定積分の値は0になります。" },
+                { question: "線形独立なベクトルからなる集合は、そのベクトルの線形結合によって、そのベクトル空間の任意のベクトルを生成できる。", answer: false, explanation: "線形独立なベクトルからなる集合がそのベクトル空間の任意のベクトルを生成できるのは、その集合が基底である場合です。線形独立であることと、生成できること（張ること）は別々の条件です。" },
+                { question: "無限級数 n=1から∞までの1/n² は収束する。", answer: true, explanation: "これはP-級数の収束条件 p > 1 に該当する例です（p=2）。したがって、この級数は収束します。" },
+                { question: "行列の階数（ランク）は、その行列の線形独立な行ベクトルの最大数と等しい。", answer: true, explanation: "行列の階数（ランク）は、線形独立な行ベクトルの最大数、または線形独立な列ベクトルの最大数として定義されます。これらは常に一致します。" },
+                { question: "複素関数 f(z) = z² は複素平面全体で正則関数である。", answer: true, explanation: "関数 f(z) = z² は、どこでも微分可能であり、コーシー・リーマンの関係式を満たすため、複素平面全体で正則です。" },
+                { question: "集合論において、空集合は任意の集合の部分集合である。", answer: true, explanation: "空集合は要素を持たないため、任意の集合に含まれると定義されます。これは数学の基本的な定義の一つです。" },
+                { question: "関数 f(x) = sin(x) は区間 (0, π) で上に凸である。", answer: false, explanation: "関数 f(x) = sin(x) は区間 (0, π) で下に凸です。上に凸であるためには二階微分係数が負である必要があります。f''(x) = -sin(x) であり、(0, π) では sin(x) > 0 なので f''(x) < 0 とはなりません。" },
+                { question: "線形変換は、ベクトルの足し算とスカラー倍の操作を保存する変換である。", answer: true, explanation: "線形変換の定義は、加法性 (T(u+v) = T(u) + T(v)) と斉次性 (T(cu) = cT(u)) を満たすことです。これらはそれぞれベクトルの足し算とスカラー倍の操作を保存することを意味します。" },
+                { question: "確率密度関数を持つ連続確率変数の累積分布関数は常に連続である。", answer: true, explanation: "連続確率変数の累積分布関数は、その定義から必ず連続関数となります。不連続点を持つのは離散確率変数の場合です。" },
+                { question: "微積分学の基本定理は、微分と積分が互いに逆演算であることを述べている。", answer: true, explanation: "微積分学の基本定理は、定積分を計算するために不定積分（原始関数）を用いることができるという、微分と積分の本質的な関係を示しています。" },
+                { question: "3次元空間において、互いに平行でない2つの平面は必ず1つの直線で交わる。", answer: true, explanation: "3次元空間において、互いに平行でない2つの平面は、必ず共通の交線（直線）を持ちます。これはユークリッド幾何学の基本的な性質です。" },
+                { question: "極限 $\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$ である。", answer: true, explanation: "これは三角関数の極限の基本的な公式であり、微分学でよく用いられます。" },
+                { question: "逆行列を持つ行列の行列式は常に0である。", answer: false, explanation: "逆行列を持つ行列（正則行列）の行列式は、0ではありません。行列式が0の行列は特異行列と呼ばれ、逆行列を持ちません。" },
+                { question: "連続関数は必ず最大値と最小値を持つ。", answer: false, explanation: "連続関数が最大値と最小値を持つのは、閉区間上で定義されている場合です（最大値最小値の定理）。開区間や無限区間では持たないことがあります（例: f(x)=x, 区間(0,1)）。" },
+                { question: "ベクトル空間の基底は一意に定まる。", answer: false, explanation: "ベクトル空間の基底を構成するベクトルの『数』（次元）は一意に定まりますが、具体的な『基底の組』自体は複数存在します。例えば、2次元平面の基底として {(1,0), (0,1)} と {(1,1), (1,-1)} の両方が考えられます。" },
+                { question: "複素共役な数の積は常に実数である。", answer: true, explanation: "複素数 z = a + bi とその複素共役 z* = a - bi の積は z*z = (a + bi)(a - bi) = a² - (bi)² = a² + b² となり、常に実数です。" }
+            ];
+
+            const collectionRef = collection(db, privateCollectionPath);
+            const batchOperations = [];
+
+            for (let i = 0; i < initialQuestionsData.length; i++) {
+                const q = initialQuestionsData[i];
+                batchOperations.push(addDoc(collectionRef, { ...q, order: i, creatorUid: userId })); // Add creatorUid
+            }
+
+            try {
+                await Promise.all(batchOperations);
+                console.log("Initial questions added to Firestore.");
+            } catch (error) {
+                console.error("Error adding initial questions:", error);
+            }
+        }
+
+        // 配列をシャッフルするユーティリティ関数 (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+
+        // 問題ソースに基づいてquestions配列を更新
+        async function updateQuizQuestionSet() {
+            const selectedSource = questionSourceSelect.value;
+            let filteredQuestions = [];
+
+            specificUserIdGroup.classList.add('hidden'); // 特定ユーザーID入力欄を非表示
+            specificUserIdMessage.classList.add('hidden'); // メッセージも非表示
+            specificUserIdMessage.classList.remove('text-red-500', 'text-green-600', 'text-gray-500'); // メッセージのスタイルをリセット
+            specificListIdGroup.classList.add('hidden'); // リストID入力欄を非表示
+            specificListIdMessage.classList.add('hidden'); // メッセージも非表示
+
+            if (selectedSource === 'my') {
+                filteredQuestions = myQuestions;
+            } else if (selectedSource === 'all-random-30') {
+                const allCombinedQuestions = [...myQuestions, ...sharedQuestions];
+                shuffleArray(allCombinedQuestions); // シャッフル
+                filteredQuestions = allCombinedQuestions.slice(0, 30); // 最初の30問を取得
+            } else if (selectedSource === 'specific-user') {
+                specificUserIdGroup.classList.remove('hidden'); // 特定ユーザーID入力欄を表示
+                const specificId = specificUserIdInput.value.trim();
+                if (specificId) {
+                    try {
+                        const specificUserSharedQRef = query(
+                            collection(db, `artifacts/${__app_id}/public/data/quiz_shared_questions`),
+                            where("creatorUid", "==", specificId)
+                        );
+                        // 特定ユーザーの問題は、そのユーザーが共有した公開問題のみを対象とする
+                        const sharedSnapshot = await getDocs(specificUserSharedQRef);
+
+                        const specificUserQuestions = [];
+                        sharedSnapshot.forEach(doc => {
+                            specificUserQuestions.push({ id: doc.id, ...doc.data(), isPublic: true });
+                        });
+                        
+                        // 特定ユーザーが自分自身の場合は自分のプライベート問題も含む
+                        if (specificId === userId) {
+                            specificUserQuestions.push(...myQuestions);
+                        }
+
+                        filteredQuestions = specificUserQuestions.sort((a, b) => {
+                            if (a.order !== b.order) return a.order - b.order;
+                            return a.question.localeCompare(b.question);
+                        });
+
+                        if (filteredQuestions.length === 0) {
+                            specificUserIdMessage.textContent = 'このユーザーの共有問題は見つかりませんでした。'; 
+                            specificUserIdMessage.classList.remove('hidden');
+                            specificUserIdMessage.classList.add('text-red-500');
+                        } else {
+                            specificUserIdMessage.textContent = `ユーザーID: ${specificId} の問題をロードしました。`;
+                            specificUserIdMessage.classList.remove('hidden');
+                            specificUserIdMessage.classList.add('text-green-600');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching specific user questions:", error);
+                        specificUserIdMessage.textContent = '問題のロード中にエラーが発生しました。';
+                        specificUserIdMessage.classList.remove('hidden');
+                        specificUserIdMessage.classList.add('text-red-500');
+                    }
+                } else {
+                    specificUserIdMessage.textContent = 'ユーザーIDを入力してください。';
+                    specificUserIdMessage.classList.remove('hidden');
+                    specificUserIdMessage.classList.add('text-gray-500');
+                }
+            } else if (selectedSource === 'specific-list') {
+                specificListIdGroup.classList.remove('hidden'); // Show specific list ID input
+                const listId = specificListIdInput.value.trim();
+                if (listId) {
+                    try {
+                        const listDocRef = doc(db, `artifacts/${__app_id}/public/data/quiz_question_lists`, listId);
+                        const listSnapshot = await getDoc(listDocRef);
+
+                        if (listSnapshot.exists()) { // リストが存在するか
+                            const listData = listSnapshot.data();
+                            // セキュリティルールによって、isPublic=false のリストは creatorUid が一致しないと読み込めない
+                            // なので、isPublic=true であるか、または自分が作成者であるかを確認
+                            if (listData.isPublic === true || listData.creatorUid === userId) {
+                                const questionIdsInList = listData.questionIds || [];
+                                
+                                // Load questions from the two main sources (myQuestions and sharedQuestions)
+                                // myQuestionsとsharedQuestionsはリアルタイムで同期されているため、最新のデータがここにある
+                                const allAvailableQuestions = [...myQuestions, ...sharedQuestions];
+                                
+                                // Filter questions based on IDs in the list
+                                filteredQuestions = allAvailableQuestions.filter(q => questionIdsInList.includes(q.id));
+
+                                filteredQuestions.sort((a, b) => {
+                                    if (a.order !== b.order) return a.order - b.order;
+                                    return a.question.localeCompare(b.question);
+                                });
+
+                                if (filteredQuestions.length === 0) {
+                                    specificListIdMessage.textContent = 'リストに問題が見つかりませんでした。';
+                                    specificListIdMessage.classList.remove('hidden');
+                                    specificListIdMessage.classList.add('text-red-500');
+                                } else {
+                                    specificListIdMessage.textContent = `リスト「${listData.listName || listId.substring(0, 5)}...」をロードしました。`;
+                                    specificListIdMessage.classList.remove('hidden');
+                                    specificListIdMessage.classList.add('text-green-600');
+                                }
+                            } else {
+                                // リストは存在するが、非公開でかつ作成者ではない
+                                specificListIdMessage.textContent = '指定されたリストは非公開で、アクセスできません。';
+                                specificListIdMessage.classList.remove('hidden');
+                                specificListIdMessage.classList.add('text-red-500');
+                            }
+                        } else {
+                            // リスト自体が見つからない
+                            specificListIdMessage.textContent = '指定されたリストが見つかりません。';
+                            specificListIdMessage.classList.remove('hidden');
+                            specificListIdMessage.classList.add('text-red-500');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching specific list questions:", error);
+                        // Permission deniedなどのFirestoreエラーもここで捕捉される
+                        specificListIdMessage.textContent = 'リストのロード中にエラーが発生しました。アクセス権限を確認してください。';
+                        specificListIdMessage.classList.remove('hidden');
+                        specificListIdMessage.classList.add('text-red-500');
+                    }
+                } else {
+                    specificListIdMessage.textContent = 'リストIDを入力してください。';
+                    specificListIdMessage.classList.remove('hidden');
+                    specificListIdMessage.classList.add('text-gray-500');
+                }
+            }
+            questions = filteredQuestions;
+            console.log("Current quiz question set updated:", questions.length, "questions.");
+
+            currentQuestionIndex = 0;
+            score = 0;
+            quizActive = true;
+            roundCompletionMessageElement.classList.add('hidden');
+            displayQuestion(); // 問題が更新されたらdisplayQuestionを呼ぶ
+        }
+
+        // 画面を切り替える関数
+        function showScreen(screenName) {
+            // 全ての画面を非表示にする
+            quizScreen.classList.add('hidden');
+            manageScreen.classList.add('hidden');
+            adminScreen.classList.add('hidden');
+
+            if (screenName === 'quiz') {
+                quizScreen.classList.remove('hidden');
+                updateQuizQuestionSet(); // クイズ画面に戻ったら問題セットを更新
+            } else if (screenName === 'manage') {
+                manageScreen.classList.remove('hidden');
+                // 問題管理画面に入ったらデフォルトで「問題の追加」を表示
+                showManageSubScreen('add'); 
+            } else if (screenName === 'admin') {
+                adminScreen.classList.remove('hidden');
+                renderAdminSharedQuestionList(); // 管理者画面を表示したら共有問題リストを更新
+            }
+        }
+
+        // 問題管理画面内のサブ画面を切り替える関数
+        function showManageSubScreen(subScreenName) {
+            manageAddQuestionsSection.classList.add('hidden');
+            manageDeleteQuestionsSection.classList.add('hidden');
+            manageListsSection.classList.add('hidden'); // リスト管理セクションも隠す
+
+            if (subScreenName === 'add') {
+                manageAddQuestionsSection.classList.remove('hidden');
+            } else if (subScreenName === 'delete') {
+                manageDeleteQuestionsSection.classList.remove('hidden');
+                // 「問題の消去」画面では常に自分の問題のみを表示
+                renderQuestionListForManagement(); // リストを更新
+            } else if (subScreenName === 'lists') {
+                manageListsSection.classList.remove('hidden');
+                // 新しいリスト作成サブセクションをデフォルトで表示
+                showListManagementSubSubScreen('create'); 
+            }
+        }
+
+        // 問題リストの管理サブ画面内のサブサブ画面を切り替える関数
+        function showListManagementSubSubScreen(subSubScreenName) {
+            const newListCreationSubSection = document.getElementById('new-list-creation-sub-section');
+            const existingListsSubSection = document.getElementById('existing-lists-sub-section');
+
+            newListCreationSubSection.classList.add('hidden');
+            existingListsSubSection.classList.add('hidden');
+
+            if (subSubScreenName === 'create') {
+                newListCreationSubSection.classList.remove('hidden');
+                renderMyQuestionsForListCreation(); // リスト作成用の問題リストを更新
+                currentListManageSubView = 'create';
+            } else if (subSubScreenName === 'existing') {
+                existingListsSubSection.classList.remove('hidden');
+                // 既存リスト表示時はデフォルトで「自分が作成したリスト」を表示
+                currentListManageSubView = 'my_created'; // Set default view for existing lists
+                renderExistingListsForManagement(); // 既存リストの表示を更新
+            }
+        }
+
+
+        // 質問を表示する関数
+        function displayQuestion() {
+            if (questions.length === 0) {
+                questionTextElement.textContent = '選択された問題ソースに問題がありません。';
+                quizButtons.classList.add('hidden');
+                nextButton.classList.add('hidden');
+                feedbackElement.classList.add('hidden');
+                scoreDisplay.classList.add('hidden');
+                resultScreen.classList.add('hidden');
+                roundCompletionMessageElement.classList.add('hidden');
+                return;
+            }
+
+            if (currentQuestionIndex >= questions.length) {
+                currentQuestionIndex = 0;
+                score = 0;
+            }
+
+            const q = questions[currentQuestionIndex];
+            questionTextElement.textContent = q.question;
+            scoreDisplay.textContent = `スコア: ${score} / ${currentQuestionIndex}`;
+            trueButton.disabled = false;
+            falseButton.disabled = false;
+            trueButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            falseButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            let feedbackText = ''; // 正解不正解のテキストを格納する変数
+            if (quizActive) { // 回答前の初期化時以外
+                feedbackElement.textContent = '';
+                feedbackElement.className = 'feedback';
+                feedbackElement.classList.remove('hidden');
+            }
+            nextButton.classList.add('hidden');
+            quizButtons.classList.remove('hidden');
+            resultScreen.classList.add('hidden');
+            roundCompletionMessageElement.classList.add('hidden');
+            quizActive = true;
+            questionTextElement.classList.add('question-box');
+            questionTextElement.classList.remove('text-2xl', 'font-bold', 'text-gray-800');
+            scoreDisplay.classList.remove('hidden');
+        }
+
+        // 回答をチェックする関数
+        function checkAnswer(userAnswer) {
+            if (!quizActive) return;
+
+            quizActive = false;
+
+            const q = questions[currentQuestionIndex];
+            let feedbackText = ''; // 正解不正解のテキストを格納する変数
+            if (userAnswer === q.answer) {
+                score++;
+                feedbackText = '正解！';
+                feedbackElement.classList.add('correct');
+                feedbackElement.classList.remove('incorrect');
+            } else {
+                feedbackText = `不正解... 正しい答えは ${q.answer ? '〇' : '✖'} です。`;
+                feedbackElement.classList.add('incorrect');
+                feedbackElement.classList.remove('correct');
+            }
+            feedbackElement.textContent = `${feedbackText}\n${q.explanation}`; // 解答に関わらず解説を表示
+            scoreDisplay.textContent = `スコア: ${score} / ${currentQuestionIndex + 1}`;
+            trueButton.disabled = true;
+            falseButton.disabled = true;
+            trueButton.classList.add('opacity-50', 'cursor-not-allowed');
+            falseButton.classList.add('opacity-50', 'cursor-not-allowed');
+            nextButton.classList.remove('hidden');
+
+            if (currentQuestionIndex + 1 === questions.length) {
+                endQuiz();
+            }
+        }
+
+        // クイズ終了処理
+        function endQuiz() {
+            quizButtons.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            scoreDisplay.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            finalScoreDisplay.textContent = `最終スコア: ${score} / ${questions.length} 問中`;
+            questionTextElement.textContent = 'クイズ終了！お疲れ様でした！';
+            questionTextElement.classList.remove('question-box');
+            questionTextElement.classList.add('text-2xl', 'font-bold', 'text-gray-800');
+
+            if (questions.length > 0 && currentQuestionIndex === questions.length - 1) {
+                roundCompletionMessageElement.textContent = '全問題を1周しました！次のプレイでスコアがリセットされます。';
+                roundCompletionMessageElement.classList.remove('hidden');
+            } else {
+                roundCompletionMessageElement.classList.add('hidden');
+            }
+        }
+
+        // 問題管理リストをレンダリングする関数 (一般ユーザー用 - 問題の消去セクション用)
+        function renderQuestionListForManagement() {
+            existingQuestionsList.innerHTML = '';
+            // 「問題の消去」セクションでは、自分の問題（プライベート）と自分が作成した共有問題のみを表示
+            let questionsToDisplay = [
+                ...myQuestions.filter(q => !q.isPublic), // 非公開問題
+                ...sharedQuestions.filter(q => q.creatorUid === userId) // 自分が作成した共有問題
+            ];
+
+            // Sort to ensure consistent display
+            questionsToDisplay.sort((a, b) => {
+                if (a.order !== b.order) return a.order - b.order;
+                return a.question.localeCompare(b.question);
+            });
+
+            if (questionsToDisplay.length === 0) {
+                existingQuestionsList.innerHTML = `<p class="text-gray-600">現在、あなたの問題がありません。</p>`;
+                return;
+            }
+
+            questionsToDisplay.forEach((q, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'question-item';
+                // isPublicフラグもdata属性として渡す
+                const deleteButtonHtml = `<button class="delete-button" data-id="${q.id}" data-is-public="${q.isPublic}" data-creator-uid="${q.creatorUid}">削除</button>`;
+                
+                questionItem.innerHTML = `
+                    <span class="text-sm font-medium">${index + 1}. ${q.question} ${q.isPublic ? '(共有)' : '(非公開)'}</span>
+                    ${deleteButtonHtml}
+                `;
+                existingQuestionsList.appendChild(questionItem);
+            });
+
+            document.querySelectorAll('#manage-delete-questions-section .delete-button').forEach(button => { // delete-section内のdelete-buttonに限定
+                button.addEventListener('click', (event) => {
+                    const docId = event.target.dataset.id;
+                    const isPublic = event.target.dataset.isPublic === 'true';
+                    
+                    const questionToDelete = isPublic ?
+                        sharedQuestions.find(q => q.id === docId) :
+                        myQuestions.find(q => q.id === docId);
+
+                    if (questionToDelete) {
+                        deleteQuestion(docId, questionToDelete, 'manage'); // どの画面からの削除か伝える
+                    }
+                });
+            });
+        }
+
+        // リスト作成用の問題リストをレンダリングする関数
+        function renderMyQuestionsForListCreation() {
+            myQuestionsForListCreation.innerHTML = '';
+            // リストに含める問題は、自分のプライベート問題と自分が作成した共有問題
+            const allMyCreatedQuestions = [
+                ...myQuestions.filter(q => !q.isPublic), // 非公開問題
+                ...sharedQuestions.filter(q => q.creatorUid === userId) // 自分が作成した共有問題
+            ];
+
+            // console.log("renderMyQuestionsForListCreation: Available questions for list creation:", allMyCreatedQuestions.length); // Debug log
+
+            if (allMyCreatedQuestions.length === 0) {
+                myQuestionsForListCreation.innerHTML = '<p class="text-gray-600">リストに追加できる問題がありません。新しい問題を作成してください。</p>';
+                createListButton.disabled = true; // 問題がなければリスト作成ボタンを無効化
+                // console.log("createListButton.disabled status:", createListButton.disabled); // Debug log
+                return;
+            }
+            createListButton.disabled = false; // 問題があれば有効化
+            // console.log("createListButton.disabled status:", createListButton.disabled); // Debug log
+
+            allMyCreatedQuestions.forEach((q, index) => {
+                const questionItemDiv = document.createElement('div');
+                questionItemDiv.className = 'question-item';
+                questionItemDiv.innerHTML = `
+                    <label class="question-text-for-list">
+                        <input type="checkbox" data-question-id="${q.id}">
+                        <span>${q.question} ${q.isPublic ? '(共有)' : '(非公開)'}</span>
+                    </label>
+                `;
+                myQuestionsForListCreation.appendChild(questionItemDiv);
+            });
+        }
+
+        // 既存の問題リストをレンダリングする関数
+        function renderExistingListsForManagement() {
+            existingListsList.innerHTML = '';
+            let listsToDisplay = [];
+            let messageContent = '';
+
+            if (currentListManageSubView === 'my_created') {
+                listsToDisplay = myQuestionLists; // Lists created by me (public or private)
+                messageContent = '現在、あなたが作成したリストがありません。';
+            } else { // currentListManageSubView === 'others_shared'
+                listsToDisplay = publicQuestionLists.filter(list => list.creatorUid !== userId); // Public lists not created by me
+                messageContent = '現在、他のユーザーが共有したリストがありません。';
+            }
+
+            if (listsToDisplay.length === 0) {
+                existingListsList.innerHTML = `<p class="text-gray-600">${messageContent}</p>`;
+                return;
+            }
+
+            listsToDisplay.forEach((list, index) => {
+                const listItemDiv = document.createElement('div');
+                listItemDiv.className = 'list-item';
+                
+                let deleteButtonHtml = '';
+                // 自分が作成したリストにのみ削除ボタンを表示
+                if (list.creatorUid === userId) {
+                    deleteButtonHtml = `<button class="delete-button delete-list-button" data-list-id="${list.id}">削除</button>`;
+                }
+
+                listItemDiv.innerHTML = `
+                    <span class="list-item-name">${list.listName} (${list.questionIds.length}問) ${list.isPublic ? '(共有)' : '(非公開)'}</span>
+                    <span class="list-item-id" data-list-id="${list.id}" data-creator-uid="${list.creatorUid}">ID: ${list.id.substring(0, 8)}... (作成者: ${list.creatorUid.substring(0, 5)}...)</span>
+                    ${deleteButtonHtml}
+                `;
+                existingListsList.appendChild(listItemDiv);
+            });
+
+            document.querySelectorAll('.list-item-id').forEach(span => {
+                span.addEventListener('click', () => {
+                    const listId = span.dataset.listId;
+                    // document.execCommand('copy') を使用してコピー
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = listId;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    try {
+                        document.execCommand('copy');
+                        span.textContent = 'コピーしました！';
+                        // 元のテキストに戻す
+                        setTimeout(() => {
+                            const creatorUidShort = span.dataset.creatorUid ? span.dataset.creatorUid.substring(0, 5) : 'unknown';
+                            span.textContent = `ID: ${listId.substring(0, 8)}... (作成者: ${creatorUidShort}...)`; 
+                        }, 1500);
+                    } catch (err) {
+                        console.error('Failed to copy ID:', err);
+                    } finally {
+                        document.body.removeChild(tempInput);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-list-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const listId = event.target.dataset.listId;
+                    deleteQuestionList(listId, 'manage');
+                });
+            });
+        }
+
+
+        // 管理者画面用の共有問題リストをレンダリングする関数
+        function renderAdminSharedQuestionList() {
+            adminSharedQuestionsList.innerHTML = '';
+            
+            if (sharedQuestions.length === 0) {
+                adminSharedQuestionsList.innerHTML = '<p class="text-gray-600">現在、共有問題がありません。</p>';
+                return;
+            }
+
+            sharedQuestions.forEach((q, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'question-item';
+                // 管理者は全ての共有問題を削除可能
+                const deleteButtonHtml = `<button class="delete-button" data-id="${q.id}" data-is-public="true" data-creator-uid="${q.creatorUid}">削除</button>`;
+                
+                questionItem.innerHTML = `
+                    <span class="text-sm font-medium">${index + 1}. ${q.question} (作成者: ${q.creatorUid.substring(0, 5)}...)</span>
+                    ${deleteButtonHtml}
+                `;
+                adminSharedQuestionsList.appendChild(questionItem);
+            });
+
+            document.querySelectorAll('#admin-screen .delete-button').forEach(button => { // admin-screen内のdelete-buttonに限定
+                button.addEventListener('click', (event) => {
+                    const docId = event.target.dataset.id;
+                    const questionToDelete = sharedQuestions.find(q => q.id === docId);
+                    
+                    if (questionToDelete) {
+                        deleteQuestion(docId, { ...questionToDelete, isPublic: true }, 'admin'); 
+                    }
+                });
+            });
+        }
+
+
+        // 問題をFirestoreとローカル配列から削除する関数
+        // sourceScreen: 'manage' または 'admin'
+        async function deleteQuestion(docId, questionData, sourceScreen) {
+            if (!isAuthReady) {
+                console.error("Firestore is not ready.");
+                return;
+            }
+
+            const collectionPath = questionData.isPublic ?
+                `artifacts/${__app_id}/public/data/quiz_shared_questions` :
+                `artifacts/${__app_id}/users/${userId}/quiz_questions`;
+
+            const messageElement = sourceScreen === 'admin' ? adminManageMessage : manageQuestionMessage;
+            const undoButtonElement = sourceScreen === 'admin' ? adminUndoDeleteButton : undoDeleteButton;
+
+            // --- DELETION AUTHORIZATION LOGIC ---
+            if (sourceScreen === 'manage') { // General user's "問題の消去" page
+                // ここでは自分の問題（プライベート、共有問わず）のみ削除可能
+                if (questionData.creatorUid !== userId) {
+                    messageElement.textContent = 'あなたが作成していない問題は削除できません。';
+                    messageElement.classList.remove('hidden');
+                    messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                    setTimeout(() => { messageElement.classList.add('hidden'); messageElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); }, 3000);
+                    return;
+                }
+            } else if (sourceScreen === 'admin') { // Admin screen
+                // 管理者は全ての共有問題 (isPublic: true) を削除できる
+                // 管理者は他ユーザーのプライベート問題 (isPublic: false, creatorUid !== userId) は削除できない
+                if (!questionData.isPublic && questionData.creatorUid !== userId) {
+                    messageElement.textContent = '他のユーザーが作成したプライベート問題は削除できません。';
+                    messageElement.classList.remove('hidden');
+                    messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                    setTimeout(() => { messageElement.classList.add('hidden'); messageElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); }, 3000);
+                    return;
+                }
+            }
+            // --- END DELETION AUTHORIZATION LOGIC ---
+
+            try {
+                if (undoTimeout) {
+                    clearTimeout(undoTimeout);
+                    undoTimeout = null;
+                }
+                undoButtonElement.classList.add('hidden');
+
+                lastDeletedQuestion = { ...questionData, id: docId };
+                lastDeletedDocId = docId;
+
+                const questionDocRef = doc(db, collectionPath, docId);
+                await deleteDoc(questionDocRef);
+
+                messageElement.textContent = `'${lastDeletedQuestion.question.substring(0, 20)}...' を削除しました。`;
+                messageElement.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                messageElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                undoButtonElement.classList.remove('hidden');
+
+                undoTimeout = setTimeout(() => {
+                    lastDeletedQuestion = null;
+                    lastDeletedDocId = null;
+                    undoButtonElement.classList.add('hidden');
+                    messageElement.classList.add('hidden');
+                    messageElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 5000);
+
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                messageElement.textContent = '問題の削除に失敗しました。';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                lastDeletedQuestion = null;
+                lastDeletedDocId = null;
+                undoButtonElement.classList.add('hidden');
+            }
+        }
+
+        // 削除を取り消す関数
+        async function undoDelete(sourceScreen) {
+            if (!isAuthReady || !lastDeletedQuestion) {
+                console.error("No question to undo or Firestore not ready.");
+                return;
+            }
+
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+            }
+
+            try {
+                const collectionPath = lastDeletedQuestion.isPublic ?
+                    `artifacts/${__app_id}/public/data/quiz_shared_questions` :
+                    `artifacts/${__app_id}/users/${userId}/quiz_questions`; // プライベート問題の復元
+
+                const docRef = doc(db, collectionPath, lastDeletedDocId);
+                const { id, ...dataToRestore } = lastDeletedQuestion;
+                await setDoc(docRef, dataToRestore);
+
+                const messageElement = sourceScreen === 'admin' ? adminManageMessage : manageQuestionMessage;
+                const undoButtonElement = sourceScreen === 'admin' ? adminUndoDeleteButton : undoDeleteButton;
+
+                messageElement.textContent = '削除を取り消しました！';
+                messageElement.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                messageElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+
+                lastDeletedQuestion = null;
+                lastDeletedDocId = null;
+                undoButtonElement.classList.add('hidden');
+
+                setTimeout(() => {
+                    messageElement.classList.add('hidden');
+                    messageElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 3000);
+
+            } catch (error) {
+                console.error("Error undoing delete: ", error);
+                const messageElement = sourceScreen === 'admin' ? adminManageMessage : manageQuestionMessage;
+                messageElement.textContent = '削除の取り消しに失敗しました。';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+            }
+        }
+
+        // 問題リストを削除する関数
+        async function deleteQuestionList(listId, sourceScreen) {
+            if (!isAuthReady) {
+                console.error("Firestore is not ready.");
+                return;
+            }
+
+            const collectionPath = `artifacts/${__app_id}/public/data/quiz_question_lists`;
+            const messageElement = deleteListMessage;
+            const undoButtonElement = undoListDeleteButton;
+
+            // 削除権限のチェック: リスト作成者のみが削除可能
+            const listToDelete = myQuestionLists.find(list => list.id === listId);
+            if (!listToDelete || listToDelete.creatorUid !== userId) {
+                messageElement.textContent = 'あなたが作成していないリストは削除できません。';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                setTimeout(() => { messageElement.classList.add('hidden'); messageElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); }, 3000);
+                return;
+            }
+
+            try {
+                if (undoListTimeout) {
+                    clearTimeout(undoListTimeout);
+                    undoListTimeout = null;
+                }
+                undoButtonElement.classList.add('hidden');
+
+                lastDeletedList = { ...listToDelete };
+                lastDeletedListDocId = listId;
+
+                const listDocRef = doc(db, collectionPath, listId);
+                await deleteDoc(listDocRef);
+
+                messageElement.textContent = `リスト「${lastDeletedList.listName}」を削除しました。`;
+                messageElement.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                messageElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                undoButtonElement.classList.remove('hidden');
+
+                undoListTimeout = setTimeout(() => {
+                    lastDeletedList = null;
+                    lastDeletedListDocId = null;
+                    undoButtonElement.classList.add('hidden');
+                    messageElement.classList.add('hidden');
+                    messageElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 5000);
+
+            } catch (error) {
+                console.error("Error deleting list: ", error);
+                messageElement.textContent = 'リストの削除に失敗しました。';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                lastDeletedList = null;
+                lastDeletedListDocId = null;
+                undoButtonElement.classList.add('hidden');
+            }
+        }
+
+        // リスト削除を取り消す関数
+        async function undoListDelete() {
+            if (!isAuthReady || !lastDeletedList) {
+                console.error("No list to undo or Firestore not ready.");
+                return;
+            }
+
+            if (undoListTimeout) {
+                clearTimeout(undoListTimeout);
+                undoListTimeout = null;
+            }
+
+            try {
+                const collectionPath = `artifacts/${__app_id}/public/data/quiz_question_lists`;
+                const docRef = doc(db, collectionPath, lastDeletedListDocId);
+                const { id, ...dataToRestore } = lastDeletedList;
+                await setDoc(docRef, dataToRestore);
+
+                const messageElement = deleteListMessage;
+                const undoButtonElement = undoListDeleteButton;
+
+                messageElement.textContent = 'リスト削除を取り消しました！';
+                messageElement.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                messageElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+
+                lastDeletedList = null;
+                lastDeletedListDocId = null;
+                undoButtonElement.classList.add('hidden');
+
+                setTimeout(() => {
+                    messageElement.classList.add('hidden');
+                    messageElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 3000);
+
+            } catch (error) {
+                console.error("Error undoing list delete: ", error);
+                const messageElement = deleteListMessage;
+                messageElement.textContent = 'リスト削除の取り消しに失敗しました。';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+            }
+        }
+
+
+        // カスタムパスワード入力モーダルを表示する関数
+        function showPasswordPromptModal() {
+            return new Promise((resolve) => {
+                passwordModalResolve = resolve; // resolve関数を保存
+                passwordModalInput.value = ''; // 入力欄をクリア
+                passwordModalMessage.classList.add('hidden'); // メッセージを隠す
+                passwordModalOverlay.classList.remove('hidden'); // モーダルを表示
+                passwordModalInput.focus(); // 入力フィールドにフォーカス
+            });
+        }
+
+        // カスタムパスワード入力モーダルを非表示にする関数
+        function hidePasswordPromptModal() {
+            passwordModalOverlay.classList.add('hidden');
+            passwordModalResolve = null;
+        }
+
+        // イベントリスナー
+        trueButton.addEventListener('click', () => checkAnswer(true));
+        falseButton.addEventListener('click', () => checkAnswer(false));
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            displayQuestion();
+        });
+        restartButton.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            quizActive = true;
+            roundCompletionMessageElement.classList.add('hidden');
+            displayQuestion();
+        });
+
+        // 一般ユーザー向け新しい問題を追加する機能
+        addQuestionButton.addEventListener('click', async () => {
+            if (!isAuthReady) {
+                addQuestionMessage.textContent = 'Firestoreが準備できていません。しばらくお待ちください。';
+                addQuestionMessage.classList.remove('hidden');
+                addQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                return;
+            }
+
+            const newQuestionText = newQuestionTextInput.value.trim();
+            const newAnswerValue = document.querySelector('input[name="new-answer"]:checked').value;
+            const newExplanationText = newExplanationTextInput.value.trim();
+            const shareWithEveryone = shareWithEveryoneCheckbox.checked; // デフォルトでtrue
+
+            if (!newQuestionText) {
+                addQuestionMessage.textContent = '問題文を入力してください。';
+                addQuestionMessage.classList.remove('hidden');
+                addQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                return;
+            }
+
+            const newAnswer = (newAnswerValue === 'true');
+            let targetCollectionRef;
+            let orderValue;
+
+            if (shareWithEveryone) {
+                targetCollectionRef = collection(db, `artifacts/${__app_id}/public/data/quiz_shared_questions`);
+                orderValue = sharedQuestions.length > 0 ? Math.max(...sharedQuestions.map(q => q.order)) + 1 : 0;
+            } else {
+                targetCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/quiz_questions`);
+                orderValue = myQuestions.length > 0 ? Math.max(...myQuestions.map(q => q.order)) + 1 : 0;
+            }
+
+            const newQuestion = {
+                question: newQuestionText,
+                answer: newAnswer,
+                explanation: newExplanationText || "解説はありません。",
+                order: orderValue,
+                creatorUid: userId // Store creator UID
+            };
+
+            try {
+                await addDoc(targetCollectionRef, newQuestion);
+
+                newQuestionTextInput.value = '';
+                newExplanationTextInput.value = '';
+                document.querySelector('input[name="new-answer"][value="true"]').checked = true;
+                shareWithEveryoneCheckbox.checked = true; // Default to checked: true
+
+                addQuestionMessage.textContent = '問題が追加されました！';
+                addQuestionMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                addQuestionMessage.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                setTimeout(() => {
+                    addQuestionMessage.classList.add('hidden');
+                    addQuestionMessage.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 3000);
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                addQuestionMessage.textContent = '問題の追加に失敗しました。';
+                addQuestionMessage.classList.remove('hidden');
+                addQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+            }
+        });
+
+        // 管理者向け新しい問題を追加する機能 (admin-screenから)
+        adminAddQuestionButton.addEventListener('click', async () => {
+            if (!isAuthReady) {
+                adminAddQuestionMessage.textContent = 'Firestoreが準備できていません。しばらくお待ちください。';
+                adminAddQuestionMessage.classList.remove('hidden');
+                adminAddQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                return;
+            }
+
+            const newQuestionText = adminNewQuestionTextInput.value.trim();
+            const newAnswerValue = document.querySelector('input[name="admin-new-answer"]:checked').value;
+            const newExplanationText = adminNewExplanationTextInput.value.trim();
+            const shareWithEveryone = adminShareWithEveryoneCheckbox.checked; // デフォルトでtrue
+
+            if (!newQuestionText) {
+                adminAddQuestionMessage.textContent = '問題文を入力してください。';
+                adminAddQuestionMessage.classList.remove('hidden');
+                adminAddQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                return;
+            }
+
+            const newAnswer = (newAnswerValue === 'true');
+            let targetCollectionRef;
+            let orderValue;
+
+            if (shareWithEveryone) {
+                targetCollectionRef = collection(db, `artifacts/${__app_id}/public/data/quiz_shared_questions`);
+                orderValue = sharedQuestions.length > 0 ? Math.max(...sharedQuestions.map(q => q.order)) + 1 : 0;
+            } else {
+                // 管理者が非公開問題を追加する場合、自分のプライベートコレクションに追加
+                targetCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/quiz_questions`);
+                orderValue = myQuestions.length > 0 ? Math.max(...myQuestions.map(q => q.order)) + 1 : 0;
+            }
+
+            const newQuestion = {
+                question: newQuestionText,
+                answer: newAnswer,
+                explanation: newExplanationText || "解説はありません。",
+                order: orderValue,
+                creatorUid: userId // Store creator UID
+            };
+
+            try {
+                await addDoc(targetCollectionRef, newQuestion);
+
+                adminNewQuestionTextInput.value = '';
+                adminNewExplanationTextInput.value = '';
+                document.querySelector('input[name="admin-new-answer"][value="true"]').checked = true;
+                adminShareWithEveryoneCheckbox.checked = true; // Default to checked: true
+
+                adminAddQuestionMessage.textContent = '問題が追加されました！';
+                adminAddQuestionMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                adminAddQuestionMessage.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                setTimeout(() => {
+                    adminAddQuestionMessage.classList.add('hidden');
+                    adminAddQuestionMessage.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                }, 3000);
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                adminAddQuestionMessage.textContent = '問題の追加に失敗しました。';
+                adminAddQuestionMessage.classList.remove('hidden');
+                adminAddQuestionMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+            }
+        });
+
+
+        // 画面切り替えボタンのイベントリスナー
+        goToManageButton.addEventListener('click', () => showScreen('manage'));
+        goToQuizButton.addEventListener('click', () => showScreen('quiz')); // manage-screenからクイズに戻る
+        
+        goToAdminButton.addEventListener('click', async () => { // 管理者ログインボタンのクリックイベント
+            const password = await showPasswordPromptModal(); // カスタムモーダルを表示し、結果を待つ
+            if (password === ADMIN_PASSWORD) {
+                showScreen('admin');
+            } else if (password !== null) { // nullはキャンセル時
+                passwordModalMessage.textContent = 'パスワードが異なります。';
+                passwordModalMessage.classList.remove('hidden');
+                passwordModalMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+            }
+        });
+        
+        goToQuizFromAdminButton.addEventListener('click', () => showScreen('quiz')); // admin-screenからクイズに戻る
+
+        undoDeleteButton.addEventListener('click', () => undoDelete('manage')); // 一般ユーザー画面のUndo (問題)
+        adminUndoDeleteButton.addEventListener('click', () => undoDelete('admin')); // 管理者画面のUndo (問題)
+        undoListDeleteButton.addEventListener('click', () => undoListDelete()); // 問題リスト削除のUndo
+
+
+        // カスタムモーダルのOK/Cancelボタンのイベントリスナー
+        passwordModalOkButton.addEventListener('click', () => {
+            if (passwordModalResolve) {
+                passwordModalResolve(passwordModalInput.value); // 入力値をresolve
+            }
+            hidePasswordPromptModal();
+        });
+
+        passwordModalCancelButton.addEventListener('click', () => {
+            if (passwordModalResolve) {
+                passwordModalResolve(null); // nullをresolve (キャンセル)
+            }
+            hidePasswordPromptModal();
+        });
+
+        // EnterキーでOKボタンを押せるようにする
+        passwordModalInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                passwordModalOkButton.click();
+            }
+        });
+
+
+        // 問題管理画面内のサブ画面切り替えボタン
+        showManageAddButton.addEventListener('click', () => showManageSubScreen('add'));
+        showManageDeleteButton.addEventListener('click', () => showManageSubScreen('delete'));
+        showManageListsButton.addEventListener('click', () => showManageSubScreen('lists'));
+
+        // 問題リストの管理サブ画面内のサブサブ画面切り替えボタン
+        showCreateListButton.addEventListener('click', () => showListManagementSubSubScreen('create'));
+        showExistingListsButton.addEventListener('click', () => showListManagementSubSubScreen('existing'));
+
+        // 既存リストサブセクション内のボタン
+        document.getElementById('show-my-created-lists').addEventListener('click', () => {
+            currentListManageSubView = 'my_created';
+            renderExistingListsForManagement();
+        });
+        document.getElementById('show-others-shared-lists').addEventListener('click', () => {
+            currentListManageSubView = 'others_shared';
+            renderExistingListsForManagement();
+        });
+
+
+        // 問題ソース選択のイベントリスナー
+        questionSourceSelect.addEventListener('change', () => {
+            // 各種ID入力グループの表示/非表示をリセット
+            specificUserIdGroup.classList.add('hidden');
+            specificListIdGroup.classList.add('hidden');
+
+            // 選択されたソースに応じて特定の入力グループを表示
+            if (questionSourceSelect.value === 'specific-user') {
+                specificUserIdGroup.classList.remove('hidden');
+            } else if (questionSourceSelect.value === 'specific-list') {
+                specificListIdGroup.classList.remove('hidden');
+            }
+            updateQuizQuestionSet();
+        });
+
+        // 特定のユーザーID入力欄のイベントリスナー
+        specificUserIdInput.addEventListener('input', () => {
+            updateQuizQuestionSet(); // ID入力時に問題をフィルタリング
+        });
+
+        // 特定のリストID入力欄のイベントリスナー
+        specificListIdInput.addEventListener('input', () => {
+            updateQuizQuestionSet(); // ID入力時にリスト問題をロード
+        });
+
+
+        // エクスポートボタンのイベントリスナー
+        exportMyQuestionsButton.addEventListener('click', () => {
+            if (!myQuestions.length) {
+                importExportMessage.textContent = 'エクスポートする問題がありません。';
+                importExportMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-400');
+                importExportMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                setTimeout(() => { importExportMessage.classList.add('hidden'); importExportMessage.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); }, 3000);
+                return;
+            }
+
+            const dataStr = JSON.stringify(myQuestions.map(q => ({
+                question: q.question,
+                answer: q.answer,
+                explanation: q.explanation
+            })), null, 2); // 綺麗にフォーマット
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my_math_quiz_questions_${userId.substring(0, 8)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            importExportMessage.textContent = '問題がエクスポートされました！';
+            importExportMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+            importExportMessage.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+            setTimeout(() => { importExportMessage.classList.add('hidden'); importExportMessage.classList.remove('bg-green-100', 'text-green-800', 'border-green-400'); }, 3000);
+        });
+
+        // インポートボタンのイベントリスナー
+        importMyQuestionsButton.addEventListener('click', () => {
+            importFileInput.click(); // 隠されたファイル入力要素をクリック
+        });
+
+        importFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) {
+                        throw new Error('JSON形式が不正です（配列ではありません）。');
+                    }
+
+                    let importedCount = 0;
+                    const batchOperations = [];
+                    const privateCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/quiz_questions`);
+
+                    for (const qData of importedData) {
+                        // 必須フィールドのチェック
+                        if (typeof qData.question !== 'string' || typeof qData.answer !== 'boolean') {
+                            console.warn("Skipping invalid question data:", qData);
+                            continue;
+                        }
+
+                        // 問題文で重複チェック (Firestoreから現在のmyQuestionsに既にロードされている問題)
+                        const isDuplicate = myQuestions.some(existingQ => existingQ.question === qData.question);
+                        if (isDuplicate) {
+                            console.log("Skipping duplicate question:", qData.question);
+                            continue;
+                        }
+
+                        // 新しい問題オブジェクトの作成
+                        const newQuestion = {
+                            question: qData.question,
+                            answer: qData.answer, // Corrected: qData.answer to qData.answer (already correct)
+                            explanation: qData.explanation || "解説はありません。",
+                            order: myQuestions.length + importedCount, // インポート時の順序を仮に設定
+                            creatorUid: userId // インポートしたユーザーをcreatorとする
+                        };
+                        batchOperations.push(addDoc(privateCollectionRef, newQuestion));
+                        importedCount++;
+                    }
+
+                    if (batchOperations.length === 0) {
+                        importExportMessage.textContent = 'インポートする新しい問題がありませんでした。';
+                        importExportMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-400');
+                        importExportMessage.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-400');
+                    } else {
+                        await Promise.all(batchOperations); // 一括追加
+                        importExportMessage.textContent = `${importedCount}件の問題をインポートしました！`;
+                        importExportMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-400');
+                        importExportMessage.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                    }
+                } catch (error) {
+                    console.error("Error importing questions:", error);
+                    importExportMessage.textContent = `問題のインポートに失敗しました: ${error.message}`;
+                    importExportMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-400', 'bg-yellow-100', 'text-yellow-800', 'border-yellow-400');
+                    importExportMessage.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                } finally {
+                    // ファイル入力の値をリセットし、次回同じファイルを選んだときにchangeイベントが発火するようにする
+                    importFileInput.value = '';
+                    setTimeout(() => { importExportMessage.classList.add('hidden'); importExportMessage.classList.remove('bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400', 'bg-yellow-100', 'text-yellow-800', 'border-yellow-400'); }, 5000);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // ページロード時にFirebaseを初期化
+        window.onload = initializeFirebase;
+    </script>
+</body>
+</html>
